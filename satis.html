@@ -22,7 +22,7 @@
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
         .p-item { 
             background: var(--card); padding: 15px; border-radius: 20px; text-align: center; 
-            cursor: pointer; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; transition: 0.2s; 
             border: 2px solid transparent; display: flex; flex-direction: column; justify-content: space-between; min-height: 120px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.03);
         }
@@ -30,36 +30,31 @@
         .p-item h4 { margin: 0; font-size: 14px; color: #334155; }
 
         .cart-section { width: 380px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; box-shadow: -5px 0 20px rgba(0,0,0,0.05); }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9; animation: fadeIn 0.3s ease; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9; }
         
-        .btn-pay { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn-pay:hover { filter: brightness(1.1); }
-        .btn-pay:active { transform: scale(0.96); }
+        .btn-pay { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 800; cursor: pointer; font-size: 16px; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
         .modal-box { background: white; padding: 30px; border-radius: 25px; width: 100%; max-width: 400px; text-align: center; }
 
-        .success-overlay { position: fixed; inset: 0; background: rgba(34, 197, 94, 0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; color: white; animation: fadeIn 0.3s; }
+        .success-overlay { position: fixed; inset: 0; background: rgba(34, 197, 94, 0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 5000; color: white; }
+
+        /* TERMAL YAZICI OPTİMİZASYONU */
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { 
+                position: absolute; left: 0; top: 0; width: 100%; 
+                font-family: 'Courier New', Courier, monospace;
+                padding: 10px; margin: 0; color: black; background: white;
+            }
+            .p-title { font-size: 22px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+            .p-item-row { font-size: 18px; font-weight: 700; }
+            .p-total { font-size: 20px; font-weight: 900; border-top: 2px dashed #000; margin-top: 10px; padding-top: 10px; }
+        }
+        #printArea { display: none; }
 
         @media (max-width: 768px) { body { flex-direction: column; } .cart-section { width: 100%; height: 50%; } }
-
-        /* ADİSYON YAZDIRMA CSS */
-@media print {
-    body * { visibility: hidden; }
-    #printArea, #printArea * { visibility: visible; }
-    #printArea { 
-        position: absolute; 
-        left: 0; 
-        top: 0; 
-        width: 100%; /* Kağıdı tam kaplaması için */
-        font-family: 'Arial', sans-serif; /* Daha okunaklı bir font */
-        padding: 0;
-        margin: 0;
-        color: black; 
-        background: white;
-    }
-}
-        #printArea { display: none; }
     </style>
 </head>
 <body>
@@ -96,16 +91,13 @@
 <div id="excelModal" class="modal">
     <div class="modal-box" style="text-align:left">
         <h3 style="text-align:center; margin-top:0">Excel Veri Yükleme</h3>
-        <p style="font-size:13px; color:#666; text-align:center">Önce şablonu indirin, verilerinizi doldurup geri yükleyin.</p>
-        
         <div style="background:#f1f5f9; padding:15px; border-radius:15px; margin-bottom:20px">
-            <p style="font-size:12px; margin:0 0 10px 0; font-weight:bold">Gerekli Sütun Sırası:</p>
-            <p style="font-size:12px; margin:0; font-family:monospace">1. Adı | 2. Birim | 3. Fiyat | 4. Miktar</p>
+            <p style="font-size:12px; font-weight:bold">Gerekli Sütun Sırası:</p>
+            <p style="font-size:11px; font-family:monospace">1.Adı | 2.Kategori | 3.Birim | 4.Fiyat | 5.Miktar</p>
             <button onclick="downloadSampleExcel()" style="width:100%; background:#4361ee; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:15px">
-                <i class="fas fa-download"></i> ÖRNEK ŞABLON İNDİR
+                ÖRNEK ŞABLON İNDİR
             </button>
         </div>
-
         <input type="file" id="exInput" accept=".xlsx, .xls" onchange="importExcel(this)" style="display:none">
         <button class="btn-pay" onclick="document.getElementById('exInput').click()">DOSYA SEÇ VE YÜKLE</button>
         <button onclick="document.getElementById('excelModal').style.display='none'" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer">İptal Et</button>
@@ -123,6 +115,15 @@
 </div>
 
 <script>
+    let ticketNo = parseInt(localStorage.getItem('last_ticket_no')) || 1;
+    let lastDate = localStorage.getItem('last_ticket_date') || new Date().toLocaleDateString('tr-TR');
+
+    if (lastDate !== new Date().toLocaleDateString('tr-TR')) {
+        ticketNo = 1;
+        localStorage.setItem('last_ticket_no', 1);
+        localStorage.setItem('last_ticket_date', new Date().toLocaleDateString('tr-TR'));
+    }
+
     let db = JSON.parse(localStorage.getItem('stok_takip_v2')) || [];
     let salesHistory = JSON.parse(localStorage.getItem('sales_history')) || [];
     let cart = [];
@@ -138,32 +139,36 @@
         const grid = document.getElementById('productGrid');
         const s = document.getElementById('searchBox').value.toLowerCase();
         grid.innerHTML = "";
-        db.filter(x => x.name.toLowerCase().includes(s)).forEach(item => {
-            const div = document.createElement('div');
-            div.className = "p-item";
-            div.onclick = () => {
-                if(item.unit === "KG" || item.unit === "Litre") {
-                    curItem = item;
-                    document.getElementById('kgName').innerText = item.name;
-                    document.getElementById('kgUnitHint').innerText = "Miktarı " + item.unit + " cinsinden giriniz.";
-                    document.getElementById('kgVal').value = "";
-                    document.getElementById('kgModal').style.display = 'flex';
-                    setTimeout(() => document.getElementById('kgVal').focus(), 100);
-                } else { 
-                    addToCart(item, 1);
-                }
-            };
-            div.innerHTML = `<h4>${item.name}</h4><div><b style="color:var(--primary)">${item.price.toFixed(2)} TL</b><br><small style="color:#64748b">Stok: ${Number(item.qty).toFixed(item.unit === 'Adet' ? 0 : 2)}</small></div>`;
-            grid.appendChild(div);
+        const categories = [...new Set(db.map(item => item.category || "Genel"))];
+        categories.forEach(cat => {
+            const filtered = db.filter(x => (x.category || "Genel") === cat && x.name.toLowerCase().includes(s));
+            if (filtered.length > 0) {
+                const head = document.createElement('div');
+                head.style = "grid-column: 1/-1; padding: 10px 5px; font-weight: 800; border-bottom: 2px solid #ddd; margin-top:15px; color:#1e293b";
+                head.innerText = cat.toUpperCase();
+                grid.appendChild(head);
+                filtered.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "p-item";
+                    div.onclick = () => {
+                        if(item.unit === "KG" || item.unit === "Litre") {
+                            curItem = item;
+                            document.getElementById('kgName').innerText = item.name;
+                            document.getElementById('kgUnitHint').innerText = "Miktarı " + item.unit + " cinsinden giriniz.";
+                            document.getElementById('kgModal').style.display = 'flex';
+                            setTimeout(() => document.getElementById('kgVal').focus(), 100);
+                        } else { addToCart(item, 1); }
+                    };
+                    div.innerHTML = `<h4>${item.name}</h4><div><b style="color:var(--primary)">${item.price.toFixed(2)} TL</b><br><small>Stok: ${Number(item.qty).toFixed(item.unit === 'Adet' ? 0 : 2)}</small></div>`;
+                    grid.appendChild(div);
+                });
+            }
         });
     }
 
     function confirmKg() {
         const v = parseFloat(document.getElementById('kgVal').value);
-        if(v > 0) { 
-            addToCart(curItem, v); 
-            document.getElementById('kgModal').style.display = 'none'; 
-        }
+        if(v > 0) { addToCart(curItem, v); document.getElementById('kgModal').style.display = 'none'; }
     }
 
     function addToCart(p, q) {
@@ -181,11 +186,11 @@
             const d = document.createElement('div');
             d.className = "cart-item";
             d.innerHTML = `
-                <div style="flex:1"><b>${i.name}</b><br><small>${Number(i.cartQty).toFixed(i.unit === 'Adet' ? 0 : 3)} ${i.unit || 'Adet'} x ${i.price.toFixed(2)}</small></div>
+                <div style="flex:1"><b>${i.name}</b><br><small>${Number(i.cartQty).toFixed(i.unit === 'Adet' ? 0 : 3)} x ${i.price.toFixed(2)}</small></div>
                 <div style="font-weight:800; margin-right:15px">${(i.price * i.cartQty).toFixed(2)}</div>
                 <div style="display:flex; gap:5px">
-                    <button onclick="updateQty(${i.id}, ${i.unit === 'Adet' ? -1 : -0.1})" style="border:none; width:30px; height:30px; border-radius:8px; background:#f1f5f9; font-weight:bold; cursor:pointer">-</button>
-                    <button onclick="updateQty(${i.id}, ${i.unit === 'Adet' ? 1 : 0.1})" style="border:none; width:30px; height:30px; border-radius:8px; background:#f1f5f9; font-weight:bold; cursor:pointer">+</button>
+                    <button onclick="updateQty(${i.id}, ${i.unit === 'Adet' ? -1 : -0.1})" style="border:none; width:30px; height:30px; border-radius:8px; cursor:pointer">-</button>
+                    <button onclick="updateQty(${i.id}, ${i.unit === 'Adet' ? 1 : 0.1})" style="border:none; width:30px; height:30px; border-radius:8px; cursor:pointer">+</button>
                 </div>`;
             c.appendChild(d);
         });
@@ -194,38 +199,34 @@
 
     function updateQty(id, delta) {
         const i = cart.find(x => x.id === id);
-        if(i) { 
-            i.cartQty += delta; 
-            if(i.cartQty <= 0) cart = cart.filter(x => x.id !== id); 
-        }
+        if(i) { i.cartQty += delta; if(i.cartQty <= 0) cart = cart.filter(x => x.id !== id); }
         renderCart();
     }
 
     function printReceipt(total) {
-        const storeName = localStorage.getItem('stok_pro_store_name') || "PATISSERIE";
+        const storeName = localStorage.getItem('stok_pro_store_name') || "SATIŞ";
         let itemsHtml = "";
-
         cart.forEach(i => {
-            const lineTotal = i.price * i.cartQty;
             itemsHtml += `
-                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-                    <span style="flex:1">${i.name} (${Number(i.cartQty).toFixed(i.unit === 'Adet' ? 0 : 2)})</span>
-                    <span>${lineTotal.toFixed(2)}</span>
-                </div>`;
+                <div class="p-item-row" style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span style="flex:1">${i.name}</span>
+                    <span>${(i.price * i.cartQty).toFixed(2)} TL</span>
+                </div>
+                <div style="font-size:14px; margin-bottom:10px;">${Number(i.cartQty).toFixed(i.unit === 'Adet' ? 0 : 2)} x ${i.price.toFixed(2)}</div>`;
         });
 
         const printContent = `
-            <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:10px; margin-bottom:10px">
-                <h2 style="margin:0; font-size:18px;">${storeName}</h2>
-                <small>${new Date().toLocaleString('tr-TR')}</small>
+            <div style="text-align:center; border-bottom:2px dashed #000; padding-bottom:10px; margin-bottom:10px">
+                <div class="p-title">${storeName}</div>
+                <div style="font-size:26px; font-weight:bold; margin:8px 0;">FİŞ NO: ${ticketNo}</div>
+                <div style="font-size:12px;">${new Date().toLocaleString('tr-TR')}</div>
             </div>
             ${itemsHtml}
-            <div style="border-top:1px dashed #000; margin-top:10px; padding-top:10px; display:flex; justify-content:space-between; font-weight:bold; font-size:14px">
+            <div class="p-total" style="display:flex; justify-content:space-between;">
                 <span>TOPLAM:</span>
                 <span>${total.toFixed(2)} TL</span>
             </div>
-            <div style="text-align:center; margin-top:20px; font-size:11px">Afiyet Olsun - Yine Bekleriz</div>
-            <div style="text-align:center; margin-top:5px; font-size:9px; color:#555">By NilKumsal</div>
+            <div style="text-align:center; margin-top:30px; font-weight:bold; font-size:16px;">AFİYET OLSUN</div>
         `;
 
         const printArea = document.getElementById('printArea');
@@ -233,60 +234,41 @@
         printArea.style.display = 'block';
         window.print();
         printArea.style.display = 'none';
+
+        ticketNo++;
+        localStorage.setItem('last_ticket_no', ticketNo);
     }
 
     function completeSale() {
         if(cart.length === 0) return;
-        
-        if(confirm("Satışı tamamla ve adisyon yazdırılsın mı?")) {
+        if(confirm("Satışı tamamla ve fiş yazdırılsın mı?")) {
             const totalSale = cart.reduce((acc, curr) => acc + (curr.price * curr.cartQty), 0);
-            
-            // Fiş Yazdırma
             printReceipt(totalSale);
             
-            // Satış Geçmişine Ekleme
             const todayStr = new Date().toLocaleDateString('tr-TR');
             const timeStr = new Date().toLocaleTimeString('tr-TR');
-            const itemsSold = cart.map(i => `${i.name} (${Number(i.cartQty).toFixed(i.unit === 'Adet' ? 0 : 2)} ${i.unit})`).join(' + ');
+            const itemsSold = cart.map(i => `${i.name} (${Number(i.cartQty).toFixed(i.unit === 'Adet' ? 0 : 2)})`).join(' + ');
             
-            salesHistory.push({
-                id: Date.now(),
-                date: todayStr,
-                time: timeStr,
-                total: totalSale,
-                items: itemsSold
-            });
+            salesHistory.push({ id: Date.now(), date: todayStr, time: timeStr, total: totalSale, items: itemsSold });
             localStorage.setItem('sales_history', JSON.stringify(salesHistory));
 
-            // Stoktan Düşme
-            cart.forEach(ci => { 
-                const target = db.find(d => d.id === ci.id); 
-                if(target) target.qty -= ci.cartQty; 
-            });
+            cart.forEach(ci => { const target = db.find(d => d.id === ci.id); if(target) target.qty -= ci.cartQty; });
             localStorage.setItem('stok_takip_v2', JSON.stringify(db));
             
-            const overlay = document.getElementById('successOverlay');
-            overlay.style.display = 'flex';
+            document.getElementById('successOverlay').style.display = 'flex';
             setTimeout(() => {
-                overlay.style.display = 'none';
-                cart = []; 
-                renderCart(); 
-                renderProducts();
-            }, 1500);
+                document.getElementById('successOverlay').style.display = 'none';
+                cart = []; renderCart(); renderProducts();
+            }, 1000);
         }
     }
 
     function downloadSampleExcel() {
-        const data = [
-            ["Ürün Adı", "Birim", "Fiyat", "Miktar"],
-            ["Fıstıklı Baklava", "KG", 450, 15],
-            ["Ekmek Kadayıfı", "Adet", 120, 20],
-            ["Ev Yapımı Limonata", "Litre", 85, 30]
-        ];
+        const data = [["Ürün Adı", "Kategori", "Birim", "Fiyat", "Miktar"], ["Baklava", "Tatlı", "KG", 450, 10], ["Çay", "İçecek", "Adet", 20, 100]];
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Örnek Stok Yükleme");
-        XLSX.writeFile(wb, "stok_yukleme_sablonu.xlsx");
+        XLSX.utils.book_append_sheet(wb, ws, "Stok");
+        XLSX.writeFile(wb, "stok_sablon.xlsx");
     }
 
     function importExcel(input) {
@@ -299,17 +281,18 @@
                 const row = Object.values(r);
                 return {
                     id: Date.now() + Math.random(),
-                    name: String(row[0] || "İsimsiz Ürün"),
-                    unit: String(row[1] || "Adet"),
-                    price: parseFloat(row[2] || 0),
-                    qty: parseFloat(row[3] || 0)
+                    name: String(row[0] || "İsimsiz"),
+                    category: String(row[1] || "Genel"),
+                    unit: String(row[2] || "Adet"),
+                    price: parseFloat(row[3] || 0),
+                    qty: parseFloat(row[4] || 0)
                 };
             });
             db = [...db, ...newItems];
             localStorage.setItem('stok_takip_v2', JSON.stringify(db));
             renderProducts();
             document.getElementById('excelModal').style.display='none';
-            alert(newItems.length + " ürün başarıyla eklendi.");
+            alert("Ürünler eklendi.");
         };
         reader.readAsArrayBuffer(input.files[0]);
     }
